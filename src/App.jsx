@@ -7,10 +7,10 @@ const App = () => {
   // -------------------------------
   // User Input State Variables
   // -------------------------------
-  const [motherCount, setMotherCount] = useState(0);
-  const [childMalCount, setChildMalCount] = useState(0);
-  const [childOtherCount, setChildOtherCount] = useState(0);
-  const [workerCount, setWorkerCount] = useState(0);
+  const [motherCount, setMotherCount] = useState();
+  const [childMalCount, setChildMalCount] = useState();
+  const [childOtherCount, setChildOtherCount] = useState();
+  const [workerCount, setWorkerCount] = useState();
   const [extraHolidayStr, setExtraHolidayStr] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("September");
   const [selectedYear, setSelectedYear] = useState(2025);
