@@ -1,0 +1,129 @@
+/* General Reset and Box-Sizing */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #f8fafc, #ffffff);
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.min-h-screen {
+  height: 100vh;
+}
+
+.bg-gradient-to-r {
+  background: linear-gradient(135deg, #f8fafc, #ffffff);
+}
+
+/* Card Styling */
+.bg-white {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  width: 100%;
+  max-width: 500px;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #1405bb;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.space-y-6 > div {
+  margin-bottom: 16px;
+}
+
+/* Input Fields Styling */
+input[type="number"],
+input[type="text"],
+select {
+  width: 100%;
+  padding: 14px 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #333;
+  background-color: #f9fafb;
+  transition: all 0.3s ease;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #3490dc;
+  box-shadow: 0 0 0 2px rgba(52, 144, 220, 0.2);
+}
+
+/* Labels Styling */
+label {
+  font-size: 1rem;
+  color: #666;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Button Styling */
+button {
+  width: 100%;
+  padding: 14px 20px;
+  background-color: #4c51bf;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  background-color: #434190;
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+/* Input Focus Effect */
+input:focus {
+  border-color: #4c51bf;
+  box-shadow: 0 0 0 2px rgba(76, 81, 191, 0.2);
+}
+
+select:focus {
+  border-color: #4c51bf;
+}
+
+/* Media Query for Mobile Responsiveness */
+@media (max-width: 640px) {
+  .bg-white {
+    padding: 20px;
+    max-width: 90%;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+  }
+
+  label {
+    font-size: 0.9rem;
+  }
+
+  button {
+    font-size: 1rem;
+  }
+}
