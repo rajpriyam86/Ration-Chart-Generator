@@ -1,21 +1,60 @@
 import { useState } from "react";
 import jsPDF from "jspdf";
-import "./App.css"
-import fontData from './bengaliFont.json';
+import "./App.css";
+import fontData from "./bengaliFont.json";
 
 const App = () => {
   // -------------------------------
-  // User Input State Variables
+  // Default Headcount State Variables
   // -------------------------------
-  const [motherCount, setMotherCount] = useState();
-  const [childMalCount, setChildMalCount] = useState();
-  const [childOtherCount, setChildOtherCount] = useState();
-  const [workerCount, setWorkerCount] = useState();
-  const [extraHolidayStr, setExtraHolidayStr] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState("September");
-  const [selectedYear, setSelectedYear] = useState(2025);
 
-  // Mapping for month names to month numbers
+  const today = new Date();
+  const currentMonth = today.toLocaleString("default", { month: "long" }); // "April"
+  const currentYear = today.getFullYear(); // 2025
+  
+  const [motherCount, setMotherCount] = useState("");
+  const [childMalCount, setChildMalCount] = useState("");
+  const [childOtherCount, setChildOtherCount] = useState("");
+  const [workerCount, setWorkerCount] = useState("");
+  const [extraHolidayStr, setExtraHolidayStr] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
+  // Error state for default headcount inputs
+  const [defaultErrors, setDefaultErrors] = useState({
+    motherCount: false,
+    childOtherCount: false,
+    selectedMonth: false,
+    selectedYear: false,
+  });
+
+  // -------------------------------
+  // Exception Overrides State
+  // Each exception is an object: { day, mother, childMal, childOther, worker }
+  // -------------------------------
+  const [exceptions, setExceptions] = useState([]);
+
+  // State for the new exception input form
+  const [newException, setNewException] = useState({
+    day: "",
+    mother: "",
+    childMal: "",
+    childOther: "",
+    worker: "",
+  });
+
+  // For tracking validation errors on new exception fields
+  const [newExcErrors, setNewExcErrors] = useState({
+    day: false,
+    mother: false,
+    childMal: false,
+    childOther: false,
+    worker: false,
+  });
+
+  // -------------------------------
+  // Month Mapping
+  // -------------------------------
   const monthMapping = {
     January: 1,
     February: 2,
@@ -32,7 +71,7 @@ const App = () => {
   };
 
   // -------------------------------
-  // Helper: Parse Extra Holidays
+  // Helper: Parse Extra Holidays from comma-separated string
   // -------------------------------
   const getExtraHolidays = () => {
     return extraHolidayStr
@@ -42,35 +81,35 @@ const App = () => {
   };
 
   // -------------------------------
-  // Allocation Formulas
+  // Calculation Functions (Refactored to accept counts)
   // -------------------------------
-  const calcTypeA = () => {
-    const motherTH = motherCount;
-    const childMalTH = childMalCount;
-    const childOtherTH = childOtherCount;
-    const workerTH = workerCount;
-    const totalTH = motherTH + childMalTH + childOtherTH + workerTH;
+  const calcTypeA = (counts) => {
+    const mother = counts.mother;
+    const childMal = counts.childMal;
+    const childOther = counts.childOther;
+    const worker = counts.worker;
+    const totalTH = mother + childMal + childOther + worker;
 
-    const motherEgg = motherCount * 6.5;
-    const childMalEgg = childMalCount * 6.5;
-    const childOtherEgg = childOtherCount * 6.5;
-    const workerEgg = workerCount * 6.5;
+    const motherEgg = mother * 6.5;
+    const childMalEgg = childMal * 6.5;
+    const childOtherEgg = childOther * 6.5;
+    const workerEgg = worker * 6.5;
     const eggTotal = motherEgg + childMalEgg + childOtherEgg + workerEgg;
 
-    const motherVeg = motherCount * 0.84;
-    const childMalVeg = childMalCount * 0;
-    const childOtherVeg = childOtherCount * 0;
-    const workerVeg = workerCount * 0.84;
+    const motherVeg = mother * 0.84;
+    const childMalVeg = childMal * 0;
+    const childOtherVeg = childOther * 0;
+    const workerVeg = worker * 0.84;
     const vegTotal = motherVeg + childMalVeg + childOtherVeg + workerVeg;
 
     const misc = 0;
     const grandTotal = eggTotal + vegTotal + misc;
 
     return {
-      motherTH,
-      childMalTH,
-      childOtherTH,
-      workerTH,
+      motherTH: mother,
+      childMalTH: childMal,
+      childOtherTH: childOther,
+      workerTH: worker,
       totalTH,
       motherEgg,
       childMalEgg,
@@ -87,33 +126,33 @@ const App = () => {
     };
   };
 
-  const calcTypeB = () => {
-    const motherTH = motherCount;
-    const childMalTH = childMalCount;
-    const childOtherTH = childOtherCount;
-    const workerTH = workerCount;
-    const totalTH = motherTH + childMalTH + childOtherTH + workerTH;
+  const calcTypeB = (counts) => {
+    const mother = counts.mother;
+    const childMal = counts.childMal;
+    const childOther = counts.childOther;
+    const worker = counts.worker;
+    const totalTH = mother + childMal + childOther + worker;
 
-    const motherEgg = motherCount * 6.5;
-    const childMalEgg = childMalCount * 3.25;
-    const childOtherEgg = childOtherCount * 3.25;
-    const workerEgg = workerCount * 6.5;
+    const motherEgg = mother * 6.5;
+    const childMalEgg = childMal * 3.25;
+    const childOtherEgg = childOther * 3.25;
+    const workerEgg = worker * 6.5;
     const eggTotal = motherEgg + childMalEgg + childOtherEgg + workerEgg;
 
-    const motherVeg = motherCount * 1.63;
-    const childMalVeg = childMalCount * 1.09;
-    const childOtherVeg = childOtherCount * 1.09;
-    const workerVeg = workerCount * 1.63;
+    const motherVeg = mother * 1.63;
+    const childMalVeg = childMal * 1.09;
+    const childOtherVeg = childOther * 1.09;
+    const workerVeg = worker * 1.63;
     const vegTotal = motherVeg + childMalVeg + childOtherVeg + workerVeg;
 
     const misc = 0;
     const grandTotal = eggTotal + vegTotal + misc;
 
     return {
-      motherTH,
-      childMalTH,
-      childOtherTH,
-      workerTH,
+      motherTH: mother,
+      childMalTH: childMal,
+      childOtherTH: childOther,
+      workerTH: worker,
       totalTH,
       motherEgg,
       childMalEgg,
@@ -131,269 +170,217 @@ const App = () => {
   };
 
   // -------------------------------
-  // PDF Generation Function
+  // Exception Handling Functions
+  // -------------------------------
+  const validateNewException = () => {
+    let errors = {
+      day: false,
+      mother: false,
+      childMal: false,
+      childOther: false,
+      worker: false,
+    };
+    let valid = true;
+    Object.keys(newException).forEach((field) => {
+      if (newException[field] === "" || newException[field] === null) {
+        errors[field] = true;
+        valid = false;
+      }
+    });
+    setNewExcErrors(errors);
+    return valid;
+  };
+
+  const addNewException = () => {
+    if (!validateNewException()) {
+      return;
+    }
+    const dayNum = Number(newException.day);
+    const existingIndex = exceptions.findIndex((exc) => Number(exc.day) === dayNum);
+    if (existingIndex > -1) {
+      let updatedExceptions = [...exceptions];
+      updatedExceptions[existingIndex] = {
+        day: dayNum,
+        mother: Number(newException.mother),
+        childMal: Number(newException.childMal),
+        childOther: Number(newException.childOther),
+        worker: Number(newException.worker),
+      };
+      setExceptions(updatedExceptions);
+    } else {
+      setExceptions([
+        ...exceptions,
+        {
+          day: dayNum,
+          mother: Number(newException.mother),
+          childMal: Number(newException.childMal),
+          childOther: Number(newException.childOther),
+          worker: Number(newException.worker),
+        },
+      ]);
+    }
+    setNewException({
+      day: "",
+      mother: "",
+      childMal: "",
+      childOther: "",
+      worker: "",
+    });
+    setNewExcErrors({
+      day: false,
+      mother: false,
+      childMal: false,
+      childOther: false,
+      worker: false,
+    });
+  };
+
+  const removeException = (day) => {
+    setExceptions(exceptions.filter((exc) => Number(exc.day) !== Number(day)));
+  };
+
+  // -------------------------------
+  // PDF Generation Function (Modified to use exceptions and validate default fields)
   // -------------------------------
   const generatePDF = () => {
-    // Create a new jsPDF document (A4 portrait)
+    // Validate default fields
+    let errors = {};
+    if (motherCount === "" || motherCount === undefined) {
+      errors.motherCount = true;
+    }
+    if (childOtherCount === "" || childOtherCount === undefined) {
+      errors.childOtherCount = true;
+    }
+    if (!selectedMonth) {
+      errors.selectedMonth = true;
+    }
+    if (!selectedYear) {
+      errors.selectedYear = true;
+    }
+
+    setDefaultErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      alert("সমস্ত ঘর পূরণ করা বাধ্যতামূলক!");
+      return;
+    }
+
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
       format: "a4",
     });
-    doc.addFileToVFS('PotroSans.ttf', fontData.bengaliFontBase64);
-    doc.addFont('PotroSans.ttf', 'PotroSans', 'normal');
+    doc.addFileToVFS("PotroSans.ttf", fontData.bengaliFontBase64);
+    doc.addFont("PotroSans.ttf", "PotroSans", "normal");
 
-
-    // Helper: Round value to 1 decimal place
     const displayVal = (val) =>
       val === "" || val === null || isNaN(val) ? "" : Number(val).toFixed(1);
 
     let yPos = 15;
     const marginLeft = 10;
-    const tableWidth = 190; // Total width of the table
+    const tableWidth = 190;
 
-    // -------------------------------
-    // FRONTEND: Title Section
-    // -------------------------------
+    // Title Section in PDF
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("Ration Chart", 105, yPos, { align: "center" });
     yPos += 8;
     doc.setFontSize(10);
-    doc.text(`Month: ${selectedMonth} / ${selectedYear}`, 105, yPos, {
-      align: "center",
-    });
+    doc.text(`Month: ${selectedMonth} / ${selectedYear}`, 105, yPos, { align: "center" });
     yPos += 10;
 
-    // -------------------------------
-    // HEADER SECTION: Merged Header
-    // -------------------------------
-    // We will use 3 header rows:
-    // Row 1: Group Headers (Date, Total Headcount, Egg Cost, Veg Cost, Misc, Grand Total)
-    // Row 2: Subheaders for each group; "Child" column will be merged horizontally (to be subdivided in row 3)
-    // Row 3: Subdivision for "Child": "Mal." and "Oth."
+    // HEADER SECTION (Same as before)
     const row1Height = 7;
     const row2Height = 7;
     const row3Height = 7;
     const totalHeaderHeight = row1Height + row2Height + row3Height;
     const headerY = yPos;
-
-    // Define column boundaries.
-    // We'll assume each cell is 10 mm wide.
     const colX = [
-      marginLeft, // 0: Date
-      marginLeft + 10, // 1
-      marginLeft + 20, // 2
-      marginLeft + 30, // 3
-      marginLeft + 40, // 4
-      marginLeft + 50, // 5
-      marginLeft + 60, // 6
-      marginLeft + 70, // 7
-      marginLeft + 80, // 8
-      marginLeft + 90, // 9
-      marginLeft + 100, // 10
-      marginLeft + 110, // 11
-      marginLeft + 120, // 12
-      marginLeft + 130, // 13
-      marginLeft + 140, // 14
-      marginLeft + 150, // 15
-      marginLeft + 160, // 16: Misc
-      marginLeft + 175, // 17: Grand Total
-      marginLeft + 190, // 18: End
+      marginLeft,
+      marginLeft + 10,
+      marginLeft + 20,
+      marginLeft + 30,
+      marginLeft + 40,
+      marginLeft + 50,
+      marginLeft + 60,
+      marginLeft + 70,
+      marginLeft + 80,
+      marginLeft + 90,
+      marginLeft + 100,
+      marginLeft + 110,
+      marginLeft + 120,
+      marginLeft + 130,
+      marginLeft + 140,
+      marginLeft + 150,
+      marginLeft + 160,
+      marginLeft + 175,
+      marginLeft + 190,
     ];
-    // Explanation:
-    // colX[0] to colX[1]: Date (1 cell)
-    // colX[1] to colX[6]: Total Headcount group (5 cells)
-    // colX[6] to colX[11]: Egg Cost group (5 cells)
-    // colX[11] to colX[16]: Veg Cost group (5 cells)
-    // colX[16] to colX[17]: Misc (1 cell)
-    // colX[17] to colX[18]: Grand Total (1 cell)
 
     doc.setFont("helvetica", "bold");
     doc.setFont("PotroSans");
     doc.setFontSize(10);
 
-    // Row 1: Top Group Headers
-    // "Date" (merged vertically over rows 1-3)
+    // Group Headers
     doc.rect(colX[0], headerY, colX[1] - colX[0], totalHeaderHeight);
-    doc.text(
-      "Date",
-      (colX[0] + colX[1]) / 2,
-      headerY + totalHeaderHeight / 2 + 3,
-      { align: "center" }
-    );
-
-    // "Total Headcount" merged horizontally (cells 1 to 6)
+    doc.text("Date", (colX[0] + colX[1]) / 2, headerY + totalHeaderHeight / 2 + 3, { align: "center" });
     doc.rect(colX[1], headerY, colX[6] - colX[1], row1Height);
-    doc.text(
-      "Total Headcount",
-      (colX[1] + colX[6]) / 2,
-      headerY + row1Height / 2,
-      { align: "center" }
-    );
-
-    // "Egg Cost" merged horizontally (cells 6 to 11)
+    doc.text("Total Headcount", (colX[1] + colX[6]) / 2, headerY + row1Height / 2, { align: "center" });
     doc.rect(colX[6], headerY, colX[11] - colX[6], row1Height);
-    doc.text(
-      "Egg Cost",
-      (colX[6] + colX[11]) / 2,
-      headerY + row1Height / 2,
-      { align: "center" }
-    );
-
-    // "Veg Cost" merged horizontally (cells 11 to 16)
+    doc.text("Egg Cost", (colX[6] + colX[11]) / 2, headerY + row1Height / 2, { align: "center" });
     doc.rect(colX[11], headerY, colX[16] - colX[11], row1Height);
-    doc.text(
-      "Veg Cost",
-      (colX[11] + colX[16]) / 2,
-      headerY + row1Height / 2,
-      { align: "center" }
-    );
-
-    // "Misc" merged vertically (rows 1-3)
+    doc.text("Veg Cost", (colX[11] + colX[16]) / 2, headerY + row1Height / 2, { align: "center" });
     doc.rect(colX[16], headerY, colX[17] - colX[16], totalHeaderHeight);
-    doc.text(
-      "Misc",
-      (colX[16] + colX[17]) / 2,
-      headerY + totalHeaderHeight / 2 + 3,
-      { align: "center" }
-    );
-
-
-    // "Grand Total" merged vertically (rows 1-3)
+    doc.text("Misc", (colX[16] + colX[17]) / 2, headerY + totalHeaderHeight / 2 + 3, { align: "center" });
     doc.rect(colX[17], headerY, colX[18] - colX[17], totalHeaderHeight);
-    doc.text(
-      "Grand \nTotal",
-      (colX[17] + colX[18]) / 2,
-      headerY + totalHeaderHeight / 2 + 3,
-      { align: "center" }
-    );
+    doc.text("Grand \nTotal", (colX[17] + colX[18]) / 2, headerY + totalHeaderHeight / 2 + 3, { align: "center" });
 
-    // Row 2: Subheaders for Groups
+    // Subheaders for groups
     const row2Y = headerY + row1Height;
-    // For Total Headcount group:
-    // "Mother" (merged vertically over rows 2-3)
     doc.rect(colX[1], row2Y, colX[2] - colX[1], row2Height + row3Height);
-    doc.text(
-      "Mother",
-      (colX[1] + colX[2]) / 2,
-      row2Y + (row2Height + row3Height) / 2 + 6,
-      null, 90
-    );
-    // "Child" (merged horizontally over cells 2 to 4, to be subdivided in row 3)
+    doc.text("Mother", (colX[1] + colX[2]) / 2, row2Y + (row2Height + row3Height) / 2 + 6, null, 90);
     doc.rect(colX[2], row2Y, colX[4] - colX[2], row2Height);
-    doc.text("Child", (colX[2] + colX[4]) / 2, row2Y + row2Height / 2, {
-      align: "center",
-    });
-    // "Worker" (merged vertically over rows 2-3)
+    doc.text("Child", (colX[2] + colX[4]) / 2, row2Y + row2Height / 2, { align: "center" });
     doc.rect(colX[4], row2Y, colX[5] - colX[4], row2Height + row3Height);
-    doc.text(
-      "Worker/\nHelper",
-      (colX[4] + colX[5]) / 2,
-      row2Y + (row2Height + row3Height) / 2 + 6,
-      null,90
-    );
-    // "Total" (merged vertically over rows 2-3)
+    doc.text("Worker/\nHelper", (colX[4] + colX[5]) / 2, row2Y + (row2Height + row3Height) / 2 + 6, null, 90);
     doc.rect(colX[5], row2Y, colX[6] - colX[5], row2Height + row3Height);
-    doc.text(
-      "Total",
-      (colX[5] + colX[6]) / 2,
-      row2Y + (row2Height + row3Height) / 2 + 3,
-      { align: "center" }
-    );
-
-    // For Egg Cost group:
+    doc.text("Total", (colX[5] + colX[6]) / 2, row2Y + (row2Height + row3Height) / 2 + 3, { align: "center" });
+    // Egg Cost group
     doc.rect(colX[6], row2Y, colX[7] - colX[6], row2Height + row3Height);
-    doc.text(
-      "Mother",
-      (colX[6] + colX[7]) / 2,
-      row2Y + (row2Height + row3Height) / 2 + 6,
-      null,90
-    );
+    doc.text("Mother", (colX[6] + colX[7]) / 2, row2Y + (row2Height + row3Height) / 2 + 6, null, 90);
     doc.rect(colX[7], row2Y, colX[9] - colX[7], row2Height);
-    doc.text("Child", (colX[7] + colX[9]) / 2, row2Y + row2Height / 2, {
-      align: "center",
-    });
+    doc.text("Child", (colX[7] + colX[9]) / 2, row2Y + row2Height / 2, { align: "center" });
     doc.rect(colX[9], row2Y, colX[10] - colX[9], row2Height + row3Height);
-    doc.text(
-      "Worker/\nHelper",
-      (colX[9] + colX[10]) / 2,
-      row2Y + (row2Height + row3Height) / 2 + 6,
-      null,90
-    );
+    doc.text("Worker/\nHelper", (colX[9] + colX[10]) / 2, row2Y + (row2Height + row3Height) / 2 + 6, null, 90);
     doc.rect(colX[10], row2Y, colX[11] - colX[10], row2Height + row3Height);
-    doc.text(
-      "Total",
-      (colX[10] + colX[11]) / 2,
-      row2Y + (row2Height + row3Height) / 2 + 3,
-      { align: "center" }
-    );
-
-    // For Veg Cost group:
+    doc.text("Total", (colX[10] + colX[11]) / 2, row2Y + (row2Height + row3Height) / 2 + 3, { align: "center" });
+    // Veg Cost group
     doc.rect(colX[11], row2Y, colX[12] - colX[11], row2Height + row3Height);
-    doc.text(
-      "Mother",
-      (colX[11] + colX[12]) / 2,
-      row2Y + (row2Height + row3Height) / 2 + 6,
-      null,90
-    );
+    doc.text("Mother", (colX[11] + colX[12]) / 2, row2Y + (row2Height + row3Height) / 2 + 6, null, 90);
     doc.rect(colX[12], row2Y, colX[14] - colX[12], row2Height);
-    doc.text("Child", (colX[12] + colX[14]) / 2, row2Y + row2Height / 2, {
-      align: "center",
-    });
+    doc.text("Child", (colX[12] + colX[14]) / 2, row2Y + row2Height / 2, { align: "center" });
     doc.rect(colX[14], row2Y, colX[15] - colX[14], row2Height + row3Height);
-    doc.text(
-      "Worker/\nHelper",
-      (colX[14] + colX[15]) / 2,
-      row2Y + (row2Height + row3Height) / 2 + 6,
-      null,90
-    );
+    doc.text("Worker/\nHelper", (colX[14] + colX[15]) / 2, row2Y + (row2Height + row3Height) / 2 + 6, null, 90);
     doc.rect(colX[15], row2Y, colX[16] - colX[15], row2Height + row3Height);
-    doc.text(
-      "Total",
-      (colX[15] + colX[16]) / 2,
-      row2Y + (row2Height + row3Height) / 2 + 3,
-      { align: "center" }
-    );
-
-    // Row 3: Subdivision for "Child" cells only
+    doc.text("Total", (colX[15] + colX[16]) / 2, row2Y + (row2Height + row3Height) / 2 + 3, { align: "center" });
+    // Row 3: Subdivision for "Child" cells
     const row3Y = headerY + row1Height + row2Height;
-    // For Total Headcount group, subdivide "Child":
     doc.rect(colX[2], row3Y, colX[3] - colX[2], row3Height);
-    doc.text("Mal.", (colX[2] + colX[3]) / 2, row3Y + row3Height / 2, {
-      align: "center",
-    });
+    doc.text("Mal.", (colX[2] + colX[3]) / 2, row3Y + row3Height / 2, { align: "center" });
     doc.rect(colX[3], row3Y, colX[4] - colX[3], row3Height);
-    doc.text("Oth.", (colX[3] + colX[4]) / 2, row3Y + row3Height / 2, {
-      align: "center",
-    });
-
-    // For Egg Cost group, subdivide "Child":
+    doc.text("Oth.", (colX[3] + colX[4]) / 2, row3Y + row3Height / 2, { align: "center" });
     doc.rect(colX[7], row3Y, colX[8] - colX[7], row3Height);
-    doc.text("Mal.", (colX[7] + colX[8]) / 2, row3Y + row3Height / 2, {
-      align: "center",
-    });
+    doc.text("Mal.", (colX[7] + colX[8]) / 2, row3Y + row3Height / 2, { align: "center" });
     doc.rect(colX[8], row3Y, colX[9] - colX[8], row3Height);
-    doc.text("Oth.", (colX[8] + colX[9]) / 2, row3Y + row3Height / 2, {
-      align: "center",
-    });
-
-    // For Veg Cost group, subdivide "Child":
+    doc.text("Oth.", (colX[8] + colX[9]) / 2, row3Y + row3Height / 2, { align: "center" });
     doc.rect(colX[12], row3Y, colX[13] - colX[12], row3Height);
-    doc.text("Mal.", (colX[12] + colX[13]) / 2, row3Y + row3Height / 2, {
-      align: "center",
-    });
+    doc.text("Mal.", (colX[12] + colX[13]) / 2, row3Y + row3Height / 2, { align: "center" });
     doc.rect(colX[13], row3Y, colX[14] - colX[13], row3Height);
-    doc.text("Oth.", (colX[13] + colX[14]) / 2, row3Y + row3Height / 2, {
-      align: "center",
-    });
+    doc.text("Oth.", (colX[13] + colX[14]) / 2, row3Y + row3Height / 2, { align: "center" });
 
-    // Update yPos to start data rows below the header
     yPos = headerY + totalHeaderHeight + 1;
 
-    // -------------------------------
-    // DATA ROWS SECTION
-    // -------------------------------
+    // DATA ROWS: Loop through each day of the month
     const dataRowHeight = 5;
     let sumMotherTH = 0,
       sumChildMalTH = 0,
@@ -418,10 +405,27 @@ const App = () => {
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dateObj = new Date(selectedYear, monthNumber - 1, day);
-      const weekday = dateObj.getDay(); // 0=Sunday,...,6=Saturday
-
-      // Determine if it's a holiday
+      const weekday = dateObj.getDay();
       const isHoliday = weekday === 0 || getExtraHolidays().includes(day);
+
+      const exceptionForDay = exceptions.find((exc) => Number(exc.day) === day);
+      let counts;
+      if (exceptionForDay && exceptionForDay.day) {
+        counts = {
+          mother: Number(exceptionForDay.mother) || 0,
+          childMal: Number(exceptionForDay.childMal) || 0,
+          childOther: Number(exceptionForDay.childOther) || 0,
+          worker: Number(exceptionForDay.worker) || 0,
+        };
+      } else {
+        counts = {
+          mother: Number(motherCount) || 0,
+          childMal: Number(childMalCount) || 0,
+          childOther: Number(childOtherCount) || 0,
+          worker: Number(workerCount) || 0,
+        };
+      }
+
       let rowData;
       if (isHoliday) {
         rowData = {
@@ -445,7 +449,7 @@ const App = () => {
           grandTotal: "",
         };
       } else {
-        const costs = weekday % 2 === 1 ? calcTypeA() : calcTypeB();
+        const costs = weekday % 2 === 1 ? calcTypeA(counts) : calcTypeB(counts);
         rowData = { dayStr: day < 10 ? `0${day}` : `${day}`, ...costs };
 
         sumMotherTH += costs.motherTH;
@@ -470,25 +474,17 @@ const App = () => {
         sumGrandTotal += costs.grandTotal;
       }
 
-      // If holiday, fill the row with a light grey background
       if (isHoliday) {
         doc.setFillColor(230, 230, 230);
         doc.rect(marginLeft, yPos, tableWidth, dataRowHeight, "F");
       }
 
-      // Draw grid for the row
       doc.rect(marginLeft, yPos, tableWidth, dataRowHeight);
       for (let i = 0; i < colX.length; i++) {
         doc.line(colX[i], yPos, colX[i], yPos + dataRowHeight);
       }
-      doc.line(
-        marginLeft + tableWidth,
-        yPos,
-        marginLeft + tableWidth,
-        yPos + dataRowHeight
-      );
+      doc.line(marginLeft + tableWidth, yPos, marginLeft + tableWidth, yPos + dataRowHeight);
 
-      // Write data in the row (using font size 8)
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.text(rowData.dayStr, colX[0] + 1, yPos + 3);
@@ -496,74 +492,19 @@ const App = () => {
       doc.text(String(rowData.childMalTH), colX[2] + 1, yPos + 3);
       doc.text(String(rowData.childOtherTH), colX[3] + 1, yPos + 3);
       doc.text(String(rowData.workerTH), colX[4] + 1, yPos + 3);
-      doc.text(
-        rowData.totalTH !== "" ? displayVal(rowData.totalTH) : "",
-        colX[5] + 1,
-        yPos + 3
-      );
-
-      doc.text(
-        rowData.motherEgg !== "" ? displayVal(rowData.motherEgg) : "",
-        colX[6] + 1,
-        yPos + 3
-      );
-      doc.text(
-        rowData.childMalEgg !== "" ? displayVal(rowData.childMalEgg) : "",
-        colX[7] + 1,
-        yPos + 3
-      );
-      doc.text(
-        rowData.childOtherEgg !== "" ? displayVal(rowData.childOtherEgg) : "",
-        colX[8] + 1,
-        yPos + 3
-      );
-      doc.text(
-        rowData.workerEgg !== "" ? displayVal(rowData.workerEgg) : "",
-        colX[9] + 1,
-        yPos + 3
-      );
-      doc.text(
-        rowData.eggTotal !== "" ? displayVal(rowData.eggTotal) : "",
-        colX[10] + 1,
-        yPos + 3
-      );
-
-      doc.text(
-        rowData.motherVeg !== "" ? displayVal(rowData.motherVeg) : "",
-        colX[11] + 1,
-        yPos + 3
-      );
-      doc.text(
-        rowData.childMalVeg !== "" ? displayVal(rowData.childMalVeg) : "",
-        colX[12] + 1,
-        yPos + 3
-      );
-      doc.text(
-        rowData.childOtherVeg !== "" ? displayVal(rowData.childOtherVeg) : "",
-        colX[13] + 1,
-        yPos + 3
-      );
-      doc.text(
-        rowData.workerVeg !== "" ? displayVal(rowData.workerVeg) : "",
-        colX[14] + 1,
-        yPos + 3
-      );
-      doc.text(
-        rowData.vegTotal !== "" ? displayVal(rowData.vegTotal) : "",
-        colX[15] + 1,
-        yPos + 3
-      );
-
-      doc.text(
-        rowData.misc !== "" ? displayVal(rowData.misc) : "",
-        colX[16] + 1,
-        yPos + 3
-      );
-      doc.text(
-        rowData.grandTotal !== "" ? displayVal(rowData.grandTotal) : "",
-        colX[17] + 1,
-        yPos + 3
-      );
+      doc.text(rowData.totalTH !== "" ? String(Math.round(rowData.totalTH)) : "", colX[5] + 1, yPos + 3);
+      doc.text(rowData.motherEgg !== "" ? displayVal(rowData.motherEgg) : "", colX[6] + 1, yPos + 3);
+      doc.text(rowData.childMalEgg !== "" ? displayVal(rowData.childMalEgg) : "", colX[7] + 1, yPos + 3);
+      doc.text(rowData.childOtherEgg !== "" ? displayVal(rowData.childOtherEgg) : "", colX[8] + 1, yPos + 3);
+      doc.text(rowData.workerEgg !== "" ? displayVal(rowData.workerEgg) : "", colX[9] + 1, yPos + 3);
+      doc.text(rowData.eggTotal !== "" ? displayVal(rowData.eggTotal) : "", colX[10] + 1, yPos + 3);
+      doc.text(rowData.motherVeg !== "" ? displayVal(rowData.motherVeg) : "", colX[11] + 1, yPos + 3);
+      doc.text(rowData.childMalVeg !== "" ? displayVal(rowData.childMalVeg) : "", colX[12] + 1, yPos + 3);
+      doc.text(rowData.childOtherVeg !== "" ? displayVal(rowData.childOtherVeg) : "", colX[13] + 1, yPos + 3);
+      doc.text(rowData.workerVeg !== "" ? displayVal(rowData.workerVeg) : "", colX[14] + 1, yPos + 3);
+      doc.text(rowData.vegTotal !== "" ? displayVal(rowData.vegTotal) : "", colX[15] + 1, yPos + 3);
+      doc.text(rowData.misc !== "" ? displayVal(rowData.misc) : "", colX[16] + 1, yPos + 3);
+      doc.text(rowData.grandTotal !== "" ? displayVal(rowData.grandTotal) : "", colX[17] + 1, yPos + 3);
 
       yPos += dataRowHeight;
       if (yPos > 270 && day < daysInMonth) {
@@ -572,21 +513,13 @@ const App = () => {
       }
     }
 
-    // -------------------------------
-    // SUMMARY ROW SECTION
-    // -------------------------------
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.rect(marginLeft, yPos, tableWidth, dataRowHeight);
     for (let i = 0; i < colX.length; i++) {
       doc.line(colX[i], yPos, colX[i], yPos + dataRowHeight);
     }
-    doc.line(
-      marginLeft + tableWidth,
-      yPos,
-      marginLeft + tableWidth,
-      yPos + dataRowHeight
-    );
+    doc.line(marginLeft + tableWidth, yPos, marginLeft + tableWidth, yPos + dataRowHeight);
 
     doc.text("Total", colX[0] + 1, yPos + 3);
     doc.text(String(sumMotherTH), colX[1] + 1, yPos + 3);
@@ -594,23 +527,19 @@ const App = () => {
     doc.text(String(sumChildOtherTH), colX[3] + 1, yPos + 3);
     doc.text(String(sumWorkerTH), colX[4] + 1, yPos + 3);
     doc.text(displayVal(sumTH), colX[5] + 1, yPos + 3);
-
     doc.text(displayVal(sumMotherEgg), colX[6] + 1, yPos + 3);
     doc.text(displayVal(sumChildMalEgg), colX[7] + 1, yPos + 3);
     doc.text(displayVal(sumChildOtherEgg), colX[8] + 1, yPos + 3);
     doc.text(displayVal(sumWorkerEgg), colX[9] + 1, yPos + 3);
     doc.text(displayVal(sumEggTotal), colX[10] + 1, yPos + 3);
-
     doc.text(displayVal(sumMotherVeg), colX[11] + 1, yPos + 3);
     doc.text(displayVal(sumChildMalVeg), colX[12] + 1, yPos + 3);
     doc.text(displayVal(sumChildOtherVeg), colX[13] + 1, yPos + 3);
     doc.text(displayVal(sumWorkerVeg), colX[14] + 1, yPos + 3);
     doc.text(displayVal(sumVegTotal), colX[15] + 1, yPos + 3);
-
     doc.text(displayVal(sumMisc), colX[16] + 1, yPos + 3);
     doc.text(displayVal(sumGrandTotal), colX[17] + 1, yPos + 3);
 
-    // Save the PDF
     doc.save("RationChart.pdf");
   };
 
@@ -624,15 +553,18 @@ const App = () => {
           Generate Ration Chart PDF
         </h2>
         <div className="space-y-6">
+          {/* Default Headcount Inputs */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               গর্ভবতী/প্রসূতি মা এর সংখ্যা :
             </label>
             <input
               type="number"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={motherCount}
-              onChange={(e) => setMotherCount(Number(e.target.value))}
+              onChange={(e) => setMotherCount(e.target.value)}
+              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                defaultErrors.motherCount ? "border-red-500" : "border-gray-300"
+              }`}
             />
           </div>
           <div>
@@ -641,9 +573,9 @@ const App = () => {
             </label>
             <input
               type="number"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={childMalCount}
-              onChange={(e) => setChildMalCount(Number(e.target.value))}
+              onChange={(e) => setChildMalCount(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
           </div>
           <div>
@@ -652,9 +584,11 @@ const App = () => {
             </label>
             <input
               type="number"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={childOtherCount}
-              onChange={(e) => setChildOtherCount(Number(e.target.value))}
+              onChange={(e) => setChildOtherCount(e.target.value)}
+              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                defaultErrors.childOtherCount ? "border-red-500" : "border-gray-300"
+              }`}
             />
           </div>
           <div>
@@ -663,21 +597,21 @@ const App = () => {
             </label>
             <input
               type="number"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={workerCount}
-              onChange={(e) => setWorkerCount(Number(e.target.value))}
+              onChange={(e) => setWorkerCount(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              ছুটির দিন ( এক এর বেশি দিন হলে কমা দিয়ে লিখুন যেমন 5,14):
+              ছুটির দিন (একাধিক হলে কমা দিয়ে লিখুন যেমন 5,14):
             </label>
             <input
               type="text"
               placeholder="e.g., 5,15"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={extraHolidayStr}
               onChange={(e) => setExtraHolidayStr(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
           </div>
           <div>
@@ -685,9 +619,9 @@ const App = () => {
               মাস:
             </label>
             <select
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
             >
               {Object.keys(monthMapping).map((month) => (
                 <option key={month} value={month}>
@@ -702,11 +636,119 @@ const App = () => {
             </label>
             <input
               type="number"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                defaultErrors.selectedYear ? "border-red-500" : "border-gray-300"
+              }`}
             />
           </div>
+
+          {/* Single Exception Input Form */}
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-bold mb-2">
+              বিশেষ দিনের সংখ্যা (ডিফল্ট থেকে ভিন্ন)
+            </h3>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <select
+                value={newException.day}
+                onChange={(e) =>
+                  setNewException({ ...newException, day: e.target.value })
+                }
+                className={`p-2 border rounded-lg ${
+                  newExcErrors.day ? "border-red-500" : "border-gray-300"
+                }`}
+              >
+                <option value="">দিন নির্বাচন করুন</option>
+                {Array.from(
+                  { length: new Date(selectedYear, monthMapping[selectedMonth], 0).getDate() },
+                  (_, i) => i + 1
+                ).map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                placeholder="মা"
+                value={newException.mother}
+                onChange={(e) =>
+                  setNewException({ ...newException, mother: e.target.value })
+                }
+                className={`p-2 border rounded-lg ${
+                  newExcErrors.mother ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              <input
+                type="number"
+                placeholder="অপুষ্ট শিশু"
+                value={newException.childMal}
+                onChange={(e) =>
+                  setNewException({ ...newException, childMal: e.target.value })
+                }
+                className={`p-2 border rounded-lg ${
+                  newExcErrors.childMal ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              <input
+                type="number"
+                placeholder="অন্যান্য শিশু"
+                value={newException.childOther}
+                onChange={(e) =>
+                  setNewException({ ...newException, childOther: e.target.value })
+                }
+                className={`p-2 border rounded-lg ${
+                  newExcErrors.childOther ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              <input
+                type="number"
+                placeholder="কর্মী"
+                value={newException.worker}
+                onChange={(e) =>
+                  setNewException({ ...newException, worker: e.target.value })
+                }
+                className={`p-2 border rounded-lg ${
+                  newExcErrors.worker ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+            </div>
+            <button
+              onClick={addNewException}
+              className="bg-green-500 text-white p-2 rounded-lg mt-2"
+            >
+              বিশেষ দিন যুক্ত করুন
+            </button>
+          </div>
+
+          {/* Exceptions Preview List */}
+          {exceptions.length > 0 && (
+            <div className="border p-4 rounded-lg">
+              <h4 className="font-bold mb-2">বর্তমান বিশেষ দিনসমূহ:</h4>
+              <ul className="list-disc ml-5">
+                {exceptions.map((exc, index) => (
+                  <li key={index} className="flex items-center justify-between">
+                    <span>
+                      দিন {exc.day}: মা: {exc.mother}, অপুষ্ট শিশু: {exc.childMal}, অন্যান্য শিশু: {exc.childOther}, কর্মী: {exc.worker}
+                    </span>
+                    <button
+                      onClick={() => removeException(exc.day)}
+                      title="মুছে ফেলুন"
+                      className="remove-icon"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
+                           viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
+                      </svg>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <button
             onClick={generatePDF}
             className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-700 transition-colors"
@@ -717,7 +759,6 @@ const App = () => {
       </div>
     </div>
   );
-
 };
 
 export default App;
