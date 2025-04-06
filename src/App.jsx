@@ -605,9 +605,9 @@ const App = () => {
 
         {(!showCostPopup && !showPreview) && (
           /* Edit icon to open the cost & meal settings popup */
-          <div className="flex justify-end mb-4" style={{ display: "flex", justifyContent: "flex-end", margin: "5px 0px" }} >            
-            <button onClick={openPopup} title="Edit Meal Settings" className="p-2 border rounded-full" style={{width:150}}>
-            Edit Cost✏️
+          <div className="flex justify-end mb-4" style={{ display: "flex", justifyContent: "flex-end", margin: "5px 0px" }} >
+            <button onClick={openPopup} title="Edit Meal Settings" className="p-2 border rounded-full" style={{ width: 150 }}>
+              Edit Cost✏️
             </button>
           </div>
         )}
@@ -819,7 +819,7 @@ const App = () => {
       {/* Popup for editing Meal Cost and Option Settings */}
       {showCostPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="modal-enter bg-white rounded-lg p-6 w-11/12 max-w-lg">
+            <div className="modal-enter bg-white rounded-lg p-6 w-11/12 max-w-lg">
             <h3 className="text-xl font-bold mb-4 text-center">Meal Cost & Option Settings</h3>
             {/* Cost Edit Table */}
             <div className="overflow-auto mb-4">
@@ -833,35 +833,41 @@ const App = () => {
                 </thead>
                 <tbody>
                   {[
-                    { label: "Mother Egg", key: "motherEgg" },
-                    { label: "Child Mal Egg", key: "childMalEgg" },
-                    { label: "Child Other Egg", key: "childOtherEgg" },
-                    { label: "Worker Egg", key: "workerEgg" },
-                    { label: "Mother Veg", key: "motherVeg" },
-                    { label: "Child Mal Veg", key: "childMalVeg" },
-                    { label: "Child Other Veg", key: "childOtherVeg" },
-                    { label: "Worker Veg", key: "workerVeg" },
+                    { label: "মা এর ডিমের মোট প্রাপ্য", key: "motherEgg" },
+                    { label: "অপুষ্ট শিশুর ডিমের মোট প্রাপ্য", key: "childMalEgg" },
+                    { label: "অন্যান্য শিশুর ডিমের মোট প্রাপ্য", key: "childOtherEgg" },
+                    { label: "কর্মীর ডিমের মোট প্রাপ্য", key: "workerEgg" },
+                    { label: "মা এর শাক-সবজির মোট প্রাপ্য", key: "motherVeg" },
+                    { label: "অপুষ্ট শিশুর শাক-সবজির মোট প্রাপ্য", key: "childMalVeg" },
+                    { label: "অন্যান্য শিশুর শাক-সবজির মোট প্রাপ্য", key: "childOtherVeg" },
+                    { label: "কর্মীর শাক-সবজির মোট প্রাপ্য", key: "workerVeg" },
                   ].map((item) => (
-                    <tr key={item.key}>
-                      <td className="border p-2">{item.label}</td>
-                      <td className="border p-2">
-                        <input
-                          type="number"
-                          value={localCostSettings["ভাত , ডিমের ঝোল"][item.key]}
-                          onChange={(e) => handleCostChange("ভাত , ডিমের ঝোল", item.key, Number(e.target.value))}
-                          className="w-full p-1 border rounded"
-                        />
-                      </td>
-                      <td className="border p-2">
-                        <input
-                          type="number"
-                          value={localCostSettings["খিচুড়ি ও ডিম্"][item.key]}
-                          onChange={(e) => handleCostChange("খিচুড়ি ও ডিম্", item.key, Number(e.target.value))}
-                          className="w-full p-1 border rounded"
-                        />
-                      </td>
-                    </tr>
+                    <>
+                      <tr key={item.key}>
+                        <td className="border p-2">{item.label}</td>
+                        <td className="border p-2">
+                          <input
+                            type="number"
+                            value={localCostSettings["ভাত , ডিমের ঝোল"][item.key]}
+                            onChange={(e) => handleCostChange("ভাত , ডিমের ঝোল", item.key, Number(e.target.value))}
+                            className="w-full p-1 border rounded"
+                          />
+                        </td>
+                        <td className="border p-2">
+                          <input
+                            type="number"
+                            value={localCostSettings["খিচুড়ি ও ডিম্"][item.key]}
+                            onChange={(e) => handleCostChange("খিচুড়ি ও ডিম্", item.key, Number(e.target.value))}
+                            className="w-full p-1 border rounded"
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colSpan="3" style={{ height: "10px" }}></td>
+                      </tr>
+                    </>
                   ))}
+
                 </tbody>
               </table>
             </div>
