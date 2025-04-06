@@ -3,15 +3,49 @@ import jsPDF from "jspdf";
 import "./App.css";
 import fontData from "./bengaliFont.json";
 
+// Default cost settings for the two meal options
+const defaultMealCosts = {
+  "ভাত , ডিমের ঝোল": {
+    motherEgg: 6.5,
+    childMalEgg: 6.5,
+    childOtherEgg: 6.5,
+    workerEgg: 6.5,
+    motherVeg: 0.84,
+    childMalVeg: 0,
+    childOtherVeg: 0,
+    workerVeg: 0.84,
+  },
+  "খিচুড়ি ও ডিম্": {
+    motherEgg: 6.5,
+    childMalEgg: 3.25,
+    childOtherEgg: 3.25,
+    workerEgg: 6.5,
+    motherVeg: 1.63,
+    childMalVeg: 1.09,
+    childOtherVeg: 1.09,
+    workerVeg: 1.63,
+  },
+};
+
+// Default meal option selection for each weekday (1=Monday, 2=Tuesday, …, 6=Saturday)
+// Sunday (0) is a holiday and isn’t used.
+const defaultMealOptions = {
+  1: "ভাত , ডিমের ঝোল", // Monday
+  2: "খিচুড়ি ও ডিম্",    // Tuesday
+  3: "ভাত , ডিমের ঝোল", // Wednesday
+  4: "খিচুড়ি ও ডিম্",    // Thursday
+  5: "ভাত , ডিমের ঝোল", // Friday
+  6: "খিচুড়ি ও ডিম্",    // Saturday
+};
+
 const App = () => {
   // -------------------------------
   // Default Headcount State Variables
   // -------------------------------
-
   const today = new Date();
-  const currentMonth = today.toLocaleString("default", { month: "long" }); // "April"
-  const currentYear = today.getFullYear(); // 2025
-  
+  const currentMonth = today.toLocaleString("default", { month: "long" });
+  const currentYear = today.getFullYear();
+
   const [motherCount, setMotherCount] = useState("");
   const [childMalCount, setChildMalCount] = useState("");
   const [childOtherCount, setChildOtherCount] = useState("");
@@ -30,11 +64,8 @@ const App = () => {
 
   // -------------------------------
   // Exception Overrides State
-  // Each exception is an object: { day, mother, childMal, childOther, worker }
   // -------------------------------
   const [exceptions, setExceptions] = useState([]);
-
-  // State for the new exception input form
   const [newException, setNewException] = useState({
     day: "",
     mother: "",
@@ -42,8 +73,6 @@ const App = () => {
     childOther: "",
     worker: "",
   });
-
-  // For tracking validation errors on new exception fields
   const [newExcErrors, setNewExcErrors] = useState({
     day: false,
     mother: false,
@@ -71,6 +100,22 @@ const App = () => {
   };
 
   // -------------------------------
+  // Meal Cost and Option Settings
+  // -------------------------------
+  // Global cost settings for meal options
+  const [costSettings, setCostSettings] = useState(defaultMealCosts);
+  // Global meal option selections per weekday (key: weekday number; value: meal option)
+  const [mealOptionSettings, setMealOptionSettings] = useState(defaultMealOptions);
+
+  // Popup visibility state
+  const [showCostPopup, setShowCostPopup] = useState(false);
+  // Local states for editing in the popup
+  const [localCostSettings, setLocalCostSettings] = useState(costSettings);
+  const [localMealOptionSettings, setLocalMealOptionSettings] = useState(mealOptionSettings);
+
+  const [showPreview, setShowPreview] = useState(false);
+
+  // -------------------------------
   // Helper: Parse Extra Holidays from comma-separated string
   // -------------------------------
   const getExtraHolidays = () => {
@@ -81,68 +126,26 @@ const App = () => {
   };
 
   // -------------------------------
-  // Calculation Functions (Refactored to accept counts)
+  // Calculation Function (Generic using cost settings)
   // -------------------------------
-  const calcTypeA = (counts) => {
+  const calcCostByMealOption = (mealOption, counts, currentCostSettings) => {
+    const cost = currentCostSettings[mealOption];
     const mother = counts.mother;
     const childMal = counts.childMal;
     const childOther = counts.childOther;
     const worker = counts.worker;
     const totalTH = mother + childMal + childOther + worker;
 
-    const motherEgg = mother * 6.5;
-    const childMalEgg = childMal * 6.5;
-    const childOtherEgg = childOther * 6.5;
-    const workerEgg = worker * 6.5;
+    const motherEgg = mother * cost.motherEgg;
+    const childMalEgg = childMal * cost.childMalEgg;
+    const childOtherEgg = childOther * cost.childOtherEgg;
+    const workerEgg = worker * cost.workerEgg;
     const eggTotal = motherEgg + childMalEgg + childOtherEgg + workerEgg;
 
-    const motherVeg = mother * 0.84;
-    const childMalVeg = childMal * 0;
-    const childOtherVeg = childOther * 0;
-    const workerVeg = worker * 0.84;
-    const vegTotal = motherVeg + childMalVeg + childOtherVeg + workerVeg;
-
-    const misc = 0;
-    const grandTotal = eggTotal + vegTotal + misc;
-
-    return {
-      motherTH: mother,
-      childMalTH: childMal,
-      childOtherTH: childOther,
-      workerTH: worker,
-      totalTH,
-      motherEgg,
-      childMalEgg,
-      childOtherEgg,
-      workerEgg,
-      eggTotal,
-      motherVeg,
-      childMalVeg,
-      childOtherVeg,
-      workerVeg,
-      vegTotal,
-      misc,
-      grandTotal,
-    };
-  };
-
-  const calcTypeB = (counts) => {
-    const mother = counts.mother;
-    const childMal = counts.childMal;
-    const childOther = counts.childOther;
-    const worker = counts.worker;
-    const totalTH = mother + childMal + childOther + worker;
-
-    const motherEgg = mother * 6.5;
-    const childMalEgg = childMal * 3.25;
-    const childOtherEgg = childOther * 3.25;
-    const workerEgg = worker * 6.5;
-    const eggTotal = motherEgg + childMalEgg + childOtherEgg + workerEgg;
-
-    const motherVeg = mother * 1.63;
-    const childMalVeg = childMal * 1.09;
-    const childOtherVeg = childOther * 1.09;
-    const workerVeg = worker * 1.63;
+    const motherVeg = mother * cost.motherVeg;
+    const childMalVeg = childMal * cost.childMalVeg;
+    const childOtherVeg = childOther * cost.childOtherVeg;
+    const workerVeg = worker * cost.workerVeg;
     const vegTotal = motherVeg + childMalVeg + childOtherVeg + workerVeg;
 
     const misc = 0;
@@ -240,7 +243,7 @@ const App = () => {
   };
 
   // -------------------------------
-  // PDF Generation Function (Modified to use exceptions and validate default fields)
+  // PDF Generation Function (Now uses updated cost settings & meal options)
   // -------------------------------
   const generatePDF = () => {
     // Validate default fields
@@ -289,7 +292,7 @@ const App = () => {
     doc.text(`Month: ${selectedMonth} / ${selectedYear}`, 105, yPos, { align: "center" });
     yPos += 10;
 
-    // HEADER SECTION (Same as before)
+    // HEADER SECTION
     const row1Height = 7;
     const row2Height = 7;
     const row3Height = 7;
@@ -449,7 +452,8 @@ const App = () => {
           grandTotal: "",
         };
       } else {
-        const costs = weekday % 2 === 1 ? calcTypeA(counts) : calcTypeB(counts);
+        const mealOption = localMealOptionSettings[weekday] || mealOptionSettings[weekday] || "ভাত , ডিমের ঝোল";
+        const costs = calcCostByMealOption(mealOption, counts, costSettings);
         rowData = { dayStr: day < 10 ? `0${day}` : `${day}`, ...costs };
 
         sumMotherTH += costs.motherTH;
@@ -544,6 +548,52 @@ const App = () => {
   };
 
   // -------------------------------
+  // Popup Handlers for Cost and Meal Option Edit
+  // -------------------------------
+  const openPopup = () => {
+    setLocalCostSettings(costSettings);
+    setLocalMealOptionSettings(mealOptionSettings);
+    setShowPreview(false)
+    setShowCostPopup(true);
+  };
+
+  const closePopup = () => {
+    setShowCostPopup(false);
+    setShowPreview(false);
+  };
+
+  const savePopupChanges = () => {
+    setCostSettings(localCostSettings);
+    setMealOptionSettings(localMealOptionSettings);
+    setShowCostPopup(false);
+    setShowPreview(false)
+  };
+
+  const openPreview = () => {
+    setShowPreview(true)
+    setShowCostPopup(false);
+  }
+
+  // Handler for updating cost values in the local cost settings table
+  const handleCostChange = (mealOption, field, value) => {
+    setLocalCostSettings((prev) => ({
+      ...prev,
+      [mealOption]: {
+        ...prev[mealOption],
+        [field]: value,
+      },
+    }));
+  };
+
+  // Handler for meal option checkbox change per day
+  const handleMealOptionChange = (weekday, selectedOption) => {
+    setLocalMealOptionSettings((prev) => ({
+      ...prev,
+      [weekday]: selectedOption,
+    }));
+  };
+
+  // -------------------------------
   // FRONTEND: UI Rendering Section
   // -------------------------------
   return (
@@ -552,212 +602,364 @@ const App = () => {
         <h2 className="text-3xl font-extrabold text-gray-800 mb-8 text-center">
           Generate Ration Chart PDF
         </h2>
-        <div className="space-y-6">
-          {/* Default Headcount Inputs */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              গর্ভবতী/প্রসূতি মা এর সংখ্যা :
-            </label>
-            <input
-              type="number"
-              value={motherCount}
-              onChange={(e) => setMotherCount(e.target.value)}
-              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${
-                defaultErrors.motherCount ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              অপুষ্ট শিশু এর সংখ্যা :
-            </label>
-            <input
-              type="number"
-              value={childMalCount}
-              onChange={(e) => setChildMalCount(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              অন্যান্য শিশু এর সংখ্যা:
-            </label>
-            <input
-              type="number"
-              value={childOtherCount}
-              onChange={(e) => setChildOtherCount(e.target.value)}
-              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${
-                defaultErrors.childOtherCount ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              কর্মী/ সহায়িকা এর সংখ্যা:
-            </label>
-            <input
-              type="number"
-              value={workerCount}
-              onChange={(e) => setWorkerCount(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              ছুটির দিন (একাধিক হলে কমা দিয়ে লিখুন যেমন 5,14):
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., 5,15"
-              value={extraHolidayStr}
-              onChange={(e) => setExtraHolidayStr(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              মাস:
-            </label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-            >
-              {Object.keys(monthMapping).map((month) => (
-                <option key={month} value={month}>
-                  {month}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              বছর:
-            </label>
-            <input
-              type="number"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${
-                defaultErrors.selectedYear ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-          </div>
 
-          {/* Single Exception Input Form */}
-          <div className="border p-4 rounded-lg">
-            <h3 className="text-lg font-bold mb-2">
-              বিশেষ দিনের সংখ্যা (ডিফল্ট থেকে ভিন্ন)
-            </h3>
-            <div className="flex flex-col sm:flex-row items-center gap-3">
+        {(!showCostPopup && !showPreview) && (
+          /* Edit icon to open the cost & meal settings popup */
+          <div className="flex justify-end mb-4" style={{ display: "flex", justifyContent: "flex-end", margin: "5px 0px" }} >            
+            <button onClick={openPopup} title="Edit Meal Settings" className="p-2 border rounded-full" style={{width:150}}>
+            Edit Cost✏️
+            </button>
+          </div>
+        )}
+
+        {(!showCostPopup && !showPreview) && (
+
+          <div className="space-y-6 modal-enter ">
+            {/* Default Headcount Inputs */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                গর্ভবতী/প্রসূতি মা এর সংখ্যা :
+              </label>
+              <input
+                type="number"
+                value={motherCount}
+                onChange={(e) => setMotherCount(e.target.value)}
+                className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${defaultErrors.motherCount ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                অপুষ্ট শিশু এর সংখ্যা :
+              </label>
+              <input
+                type="number"
+                value={childMalCount}
+                onChange={(e) => setChildMalCount(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                অন্যান্য শিশু এর সংখ্যা:
+              </label>
+              <input
+                type="number"
+                value={childOtherCount}
+                onChange={(e) => setChildOtherCount(e.target.value)}
+                className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${defaultErrors.childOtherCount ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                কর্মী/ সহায়িকা এর সংখ্যা:
+              </label>
+              <input
+                type="number"
+                value={workerCount}
+                onChange={(e) => setWorkerCount(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ছুটির দিন (একাধিক হলে কমা দিয়ে লিখুন যেমন 5,14):
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., 5,15"
+                value={extraHolidayStr}
+                onChange={(e) => setExtraHolidayStr(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                মাস:
+              </label>
               <select
-                value={newException.day}
-                onChange={(e) =>
-                  setNewException({ ...newException, day: e.target.value })
-                }
-                className={`p-2 border rounded-lg ${
-                  newExcErrors.day ? "border-red-500" : "border-gray-300"
-                }`}
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
               >
-                <option value="">দিন নির্বাচন করুন</option>
-                {Array.from(
-                  { length: new Date(selectedYear, monthMapping[selectedMonth], 0).getDate() },
-                  (_, i) => i + 1
-                ).map((d) => (
-                  <option key={d} value={d}>
-                    {d}
+                {Object.keys(monthMapping).map((month) => (
+                  <option key={month} value={month}>
+                    {month}
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                বছর:
+              </label>
               <input
                 type="number"
-                placeholder="মা"
-                value={newException.mother}
-                onChange={(e) =>
-                  setNewException({ ...newException, mother: e.target.value })
-                }
-                className={`p-2 border rounded-lg ${
-                  newExcErrors.mother ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              <input
-                type="number"
-                placeholder="অপুষ্ট শিশু"
-                value={newException.childMal}
-                onChange={(e) =>
-                  setNewException({ ...newException, childMal: e.target.value })
-                }
-                className={`p-2 border rounded-lg ${
-                  newExcErrors.childMal ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              <input
-                type="number"
-                placeholder="অন্যান্য শিশু"
-                value={newException.childOther}
-                onChange={(e) =>
-                  setNewException({ ...newException, childOther: e.target.value })
-                }
-                className={`p-2 border rounded-lg ${
-                  newExcErrors.childOther ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              <input
-                type="number"
-                placeholder="কর্মী"
-                value={newException.worker}
-                onChange={(e) =>
-                  setNewException({ ...newException, worker: e.target.value })
-                }
-                className={`p-2 border rounded-lg ${
-                  newExcErrors.worker ? "border-red-500" : "border-gray-300"
-                }`}
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${defaultErrors.selectedYear ? "border-red-500" : "border-gray-300"
+                  }`}
               />
             </div>
+
+            {/* Single Exception Input Form */}
+            <div className="border p-4 rounded-lg">
+              <h3 className="text-lg font-bold mb-2">
+                বিশেষ দিনের সংখ্যা (ডিফল্ট থেকে ভিন্ন)
+              </h3>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <select
+                  value={newException.day}
+                  onChange={(e) =>
+                    setNewException({ ...newException, day: e.target.value })
+                  }
+                  className={`p-2 border rounded-lg ${newExcErrors.day ? "border-red-500" : "border-gray-300"
+                    }`}
+                >
+                  <option value="">দিন নির্বাচন করুন</option>
+                  {Array.from(
+                    { length: new Date(selectedYear, monthMapping[selectedMonth], 0).getDate() },
+                    (_, i) => i + 1
+                  ).map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="মা"
+                  value={newException.mother}
+                  onChange={(e) =>
+                    setNewException({ ...newException, mother: e.target.value })
+                  }
+                  className={`p-2 border rounded-lg ${newExcErrors.mother ? "border-red-500" : "border-gray-300"
+                    }`}
+                />
+                <input
+                  type="number"
+                  placeholder="অপুষ্ট শিশু"
+                  value={newException.childMal}
+                  onChange={(e) =>
+                    setNewException({ ...newException, childMal: e.target.value })
+                  }
+                  className={`p-2 border rounded-lg ${newExcErrors.childMal ? "border-red-500" : "border-gray-300"
+                    }`}
+                />
+                <input
+                  type="number"
+                  placeholder="অন্যান্য শিশু"
+                  value={newException.childOther}
+                  onChange={(e) =>
+                    setNewException({ ...newException, childOther: e.target.value })
+                  }
+                  className={`p-2 border rounded-lg ${newExcErrors.childOther ? "border-red-500" : "border-gray-300"
+                    }`}
+                />
+                <input
+                  type="number"
+                  placeholder="কর্মী"
+                  value={newException.worker}
+                  onChange={(e) =>
+                    setNewException({ ...newException, worker: e.target.value })
+                  }
+                  className={`p-2 border rounded-lg ${newExcErrors.worker ? "border-red-500" : "border-gray-300"
+                    }`}
+                />
+              </div>
+              <button
+                onClick={addNewException}
+                className="bg-green-500 text-white p-2 rounded-lg mt-2"
+              >
+                বিশেষ দিন যুক্ত করুন
+              </button>
+            </div>
+
+            {/* Exceptions Preview List */}
+            {exceptions.length > 0 && (
+              <div className="border p-4 rounded-lg">
+                <h4 className="font-bold mb-2">বর্তমান বিশেষ দিনসমূহ:</h4>
+                <ul className="list-disc ml-5">
+                  {exceptions.map((exc, index) => (
+                    <li key={index} className="flex items-center justify-between">
+                      <span>
+                        দিন {exc.day}: মা: {exc.mother}, অপুষ্ট শিশু: {exc.childMal}, অন্যান্য শিশু: {exc.childOther}, কর্মী: {exc.worker}
+                      </span>
+                      <button
+                        onClick={() => removeException(exc.day)}
+                        title="মুছে ফেলুন"
+                        className="remove-icon"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                          viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
+                        </svg>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <button
-              onClick={addNewException}
-              className="bg-green-500 text-white p-2 rounded-lg mt-2"
+              onClick={generatePDF}
+              className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-700 transition-colors"
             >
-              বিশেষ দিন যুক্ত করুন
+              PDF জেনারেট করুন
             </button>
           </div>
 
-          {/* Exceptions Preview List */}
-          {exceptions.length > 0 && (
-            <div className="border p-4 rounded-lg">
-              <h4 className="font-bold mb-2">বর্তমান বিশেষ দিনসমূহ:</h4>
-              <ul className="list-disc ml-5">
-                {exceptions.map((exc, index) => (
-                  <li key={index} className="flex items-center justify-between">
-                    <span>
-                      দিন {exc.day}: মা: {exc.mother}, অপুষ্ট শিশু: {exc.childMal}, অন্যান্য শিশু: {exc.childOther}, কর্মী: {exc.worker}
-                    </span>
-                    <button
-                      onClick={() => removeException(exc.day)}
-                      title="মুছে ফেলুন"
-                      className="remove-icon"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
-                           viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
-                      </svg>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+        )}
 
-          <button
-            onClick={generatePDF}
-            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-700 transition-colors"
-          >
-            PDF জেনারেট করুন
-          </button>
-        </div>
       </div>
-    </div>
+
+
+      {/* Popup for editing Meal Cost and Option Settings */}
+      {showCostPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="modal-enter bg-white rounded-lg p-6 w-11/12 max-w-lg">
+            <h3 className="text-xl font-bold mb-4 text-center">Meal Cost & Option Settings</h3>
+            {/* Cost Edit Table */}
+            <div className="overflow-auto mb-4">
+              <table className="w-full border">
+                <thead>
+                  <tr>
+                    <th className="border p-2">Cost Item</th>
+                    <th className="border p-2">ভাত , ডিমের ঝোল</th>
+                    <th className="border p-2">খিচুড়ি ও ডিম্</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { label: "Mother Egg", key: "motherEgg" },
+                    { label: "Child Mal Egg", key: "childMalEgg" },
+                    { label: "Child Other Egg", key: "childOtherEgg" },
+                    { label: "Worker Egg", key: "workerEgg" },
+                    { label: "Mother Veg", key: "motherVeg" },
+                    { label: "Child Mal Veg", key: "childMalVeg" },
+                    { label: "Child Other Veg", key: "childOtherVeg" },
+                    { label: "Worker Veg", key: "workerVeg" },
+                  ].map((item) => (
+                    <tr key={item.key}>
+                      <td className="border p-2">{item.label}</td>
+                      <td className="border p-2">
+                        <input
+                          type="number"
+                          value={localCostSettings["ভাত , ডিমের ঝোল"][item.key]}
+                          onChange={(e) => handleCostChange("ভাত , ডিমের ঝোল", item.key, Number(e.target.value))}
+                          className="w-full p-1 border rounded"
+                        />
+                      </td>
+                      <td className="border p-2">
+                        <input
+                          type="number"
+                          value={localCostSettings["খিচুড়ি ও ডিম্"][item.key]}
+                          onChange={(e) => handleCostChange("খিচুড়ি ও ডিম্", item.key, Number(e.target.value))}
+                          className="w-full p-1 border rounded"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Meal Option Selection for each day */}
+            <div className="mb-4">
+              <h4 className="font-bold mb-2">Select Meal Option for Each Day</h4>
+
+
+              <div className="flex items-center mb-2" style={{ display: "flex", justifyContent: "space-around" }} >
+                <span className="w-24" style={{ width: 5 }}></span>
+                <label className="flex items-center space-x-1" style={{ width: 140 }}>
+                  <span className="text-sm">ভাত , ডিমের ঝোল</span>
+                </label>
+                <label className="flex items-center space-x-1" style={{ width: 140 }}>
+                  <span className="text-sm">খিচুড়ি ও ডিম্</span>
+                </label>
+
+              </div>
+
+              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => {
+                const weekdayNum = index + 1;
+                return (
+                  <div key={day} className="flex items-center mb-2" style={{ display: "flex" }}>
+                    <span className="w-24" style={{ width: 165 }}>{day}:</span>
+                    <label className="flex items-center space-x-1" style={{ width: 165 }}>
+                      <input
+                        type="checkbox"
+                        checked={localMealOptionSettings[weekdayNum] === "ভাত , ডিমের ঝোল"}
+                        onChange={() => handleMealOptionChange(weekdayNum, "ভাত , ডিমের ঝোল")}
+                      />
+                    </label>
+                    <label className="flex items-center space-x-1" style={{ width: 165 }}>
+                      <input
+                        type="checkbox"
+                        checked={localMealOptionSettings[weekdayNum] === "খিচুড়ি ও ডিম্"}
+                        onChange={() => handleMealOptionChange(weekdayNum, "খিচুড়ি ও ডিম্")}
+                      />
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex justify-end space-x-3" style={{ display: "flex", justifyContent: "space-around", margin: "11px 0px" }}>
+              <button onClick={closePopup} className="px-4 py-2 border rounded w-24 " style={{ width: 140 }}>
+                Cancel
+              </button>
+              <button onClick={openPreview} className="px-4 py-2 bg-blue-600 text-white rounded w-24  " style={{ width: 140 }}>
+                Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPreview && (
+        <div>
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="modal-enter bg-white rounded-lg p-6 w-11/12 max-w-lg">
+              {/* Preview of current changes */}
+              <div className="mb-4 p-2 border rounded">
+                <h4 className="font-bold mb-1">Preview:</h4>
+                <div className="text-sm">
+                  <p>Meal Costs:</p>
+                  <ul className="list-disc ml-5">
+                    {Object.keys(localCostSettings).map((option) => (
+                      <li key={option}>
+                        {option}: Mother Egg: {localCostSettings[option].motherEgg}, Child Mal Egg: {localCostSettings[option].childMalEgg}, Child Other Egg: {localCostSettings[option].childOtherEgg}, Worker Egg: {localCostSettings[option].workerEgg}, Mother Veg: {localCostSettings[option].motherVeg}, Child Mal Veg: {localCostSettings[option].childMalVeg}, Child Other Veg: {localCostSettings[option].childOtherVeg}, Worker Veg: {localCostSettings[option].workerVeg}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2">Meal Option by Day:</p>
+                  <ul className="list-disc ml-5">
+                    {Object.keys(localMealOptionSettings).map((weekday) => (
+                      <li key={weekday}>
+                        {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][weekday]}: {localMealOptionSettings[weekday]}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3" style={{ display: "flex", justifyContent: "space-around", margin: "11px 0px" }}>
+                <button onClick={openPopup} className="px-4 py-2 border rounded w-24 " style={{ width: 140 }}>
+                  Edit
+                </button>
+                <button onClick={savePopupChanges} className="px-4 py-2 bg-blue-600 text-white rounded w-24  " style={{ width: 150 }}>
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+
+
+    </div >
   );
 };
 
