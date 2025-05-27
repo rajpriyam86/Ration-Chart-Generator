@@ -277,7 +277,7 @@ const App = () => {
     doc.addFont("PotroSans.ttf", "PotroSans", "normal");
 
     const displayVal = (val) =>
-      val === "" || val === null || isNaN(val) ? "" : Number(val).toFixed(1);
+      val === "" || val === null || isNaN(val) ? "" : Number(val).toFixed(2);
 
     let yPos = 15;
     const marginLeft = 10;
