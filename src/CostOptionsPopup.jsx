@@ -62,6 +62,8 @@ const CostOptionsPopup = ({
                 { label: "Child Mal Veg", key: "childMalVeg" },
                 { label: "Child Other Veg", key: "childOtherVeg" },
                 { label: "Worker Veg", key: "workerVeg" },
+                { label: "অনান্য খাদ্য - অপুষ্ট শিশু", key: "childMalMisc" },
+                { label: "অনান্য খাদ্য - অন্যান্য শিশু", key: "childOtherMisc" },
               ].map((item) => (
                 <tr key={item.key}>
                   <td className="border p-2">{item.label}</td>
@@ -128,7 +130,7 @@ const CostOptionsPopup = ({
             <ul className="list-disc ml-5">
               {Object.keys(localCostSettings).map((option) => (
                 <li key={option}>
-                  {option}: Mother Egg: {localCostSettings[option].motherEgg}, Child Mal Egg: {localCostSettings[option].childMalEgg}, Child Other Egg: {localCostSettings[option].childOtherEgg}, Worker Egg: {localCostSettings[option].workerEgg}, Mother Veg: {localCostSettings[option].motherVeg}, Child Mal Veg: {localCostSettings[option].childMalVeg}, Child Other Veg: {localCostSettings[option].childOtherVeg}, Worker Veg: {localCostSettings[option].workerVeg}
+                  {option}: Mother Egg: {localCostSettings[option].motherEgg}, Child Mal Egg: {localCostSettings[option].childMalEgg}, Child Other Egg: {localCostSettings[option].childOtherEgg}, Worker Egg: {localCostSettings[option].workerEgg}, Mother Veg: {localCostSettings[option].motherVeg}, Child Mal Veg: {localCostSettings[option].childMalVeg}, Child Other Veg: {localCostSettings[option].childOtherVeg}, Worker Veg: {localCostSettings[option].workerVeg}, Child Mal Misc: {localCostSettings[option].childMalMisc}, Child Other Misc: {localCostSettings[option].childOtherMisc}
                 </li>
               ))}
             </ul>

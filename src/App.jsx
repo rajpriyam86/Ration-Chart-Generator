@@ -14,6 +14,8 @@ const defaultMealCosts = {
     childMalVeg: 0,
     childOtherVeg: 0,
     workerVeg: 0.84,
+    childMalMisc: 1.67,
+    childOtherMisc: 1.67,
   },
   "খিচুড়ি ও ডিম্": {
     motherEgg: 6.5,
@@ -24,6 +26,8 @@ const defaultMealCosts = {
     childMalVeg: 1.09,
     childOtherVeg: 1.09,
     workerVeg: 1.63,
+    childMalMisc: 0,
+    childOtherMisc: 0,
   },
 };
 
@@ -114,7 +118,9 @@ const App = () => {
     const workerVeg = worker * cost.workerVeg;
     const vegTotal = motherVeg + childMalVeg + childOtherVeg + workerVeg;
 
-    const misc = 0;
+    const childMalMisc = childMal * (cost.childMalMisc || 0);
+    const childOtherMisc = childOther * (cost.childOtherMisc || 0);
+    const misc = childMalMisc + childOtherMisc;
     const grandTotal = eggTotal + vegTotal + misc;
 
     return {
@@ -809,6 +815,8 @@ const App = () => {
                     { label: "অপুষ্ট শিশুর শাক-সবজির মোট প্রাপ্য", key: "childMalVeg" },
                     { label: "অন্যান্য শিশুর শাক-সবজির মোট প্রাপ্য", key: "childOtherVeg" },
                     { label: "কর্মীর শাক-সবজির মোট প্রাপ্য", key: "workerVeg" },
+                    { label: "অপুষ্ট শিশুর বিবিধ চার্জ (শুধু ভাত দিনে)", key: "childMalMisc" },
+                    { label: "অন্যান্য শিশুর বিবিধ চার্জ (শুধু ভাত দিনে)", key: "childOtherMisc" },
                   ].map((item) => (
                     <>
                       <tr key={item.key}>
@@ -878,7 +886,7 @@ const App = () => {
                 <ul className="list-disc ml-5">
                   {Object.keys(localCostSettings).map((option) => (
                     <li key={option}>
-                      {option}: Mother Egg: {localCostSettings[option].motherEgg}, Child Mal Egg: {localCostSettings[option].childMalEgg}, Child Other Egg: {localCostSettings[option].childOtherEgg}, Worker Egg: {localCostSettings[option].workerEgg}, Mother Veg: {localCostSettings[option].motherVeg}, Child Mal Veg: {localCostSettings[option].childMalVeg}, Child Other Veg: {localCostSettings[option].childOtherVeg}, Worker Veg: {localCostSettings[option].workerVeg}
+                      {option}: Mother Egg: {localCostSettings[option].motherEgg}, Child Mal Egg: {localCostSettings[option].childMalEgg}, Child Other Egg: {localCostSettings[option].childOtherEgg}, Worker Egg: {localCostSettings[option].workerEgg}, Mother Veg: {localCostSettings[option].motherVeg}, Child Mal Veg: {localCostSettings[option].childMalVeg}, Child Other Veg: {localCostSettings[option].childOtherVeg}, Worker Veg: {localCostSettings[option].workerVeg}, Child Mal Misc: {localCostSettings[option].childMalMisc}, Child Other Misc: {localCostSettings[option].childOtherMisc}
                     </li>
                   ))}
                 </ul>
