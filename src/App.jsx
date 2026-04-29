@@ -195,7 +195,7 @@ const App = () => {
     doc.setFont("helvetica");
 
     const displayVal = (val) =>
-      val === "" || val === null || isNaN(val) ? "" : Number(val).toFixed(1);
+      val === "" || val === null || isNaN(val) ? "" : Number(val).toFixed(2);
 
     const marginLeft = 10;
     const tableWidth = 190;
@@ -332,10 +332,10 @@ const App = () => {
       doc.text("Total Headcount", (colX[1] + colX[6]) / 2, headerY + row1Height / 2 + 2, { align: "center" });
 
       doc.rect(colX[6], headerY, colX[11] - colX[6], row1Height);
-      doc.text("Egg Cost", (colX[6] + colX[11]) / 2, headerY + row1Height / 2 + 2, { align: "center" });
+      doc.text("Veg Cost", (colX[6] + colX[11]) / 2, headerY + row1Height / 2 + 2, { align: "center" });
 
       doc.rect(colX[11], headerY, colX[16] - colX[11], row1Height);
-      doc.text("Veg Cost", (colX[11] + colX[16]) / 2, headerY + row1Height / 2 + 2, { align: "center" });
+      doc.text("Egg Cost", (colX[11] + colX[16]) / 2, headerY + row1Height / 2 + 2, { align: "center" });
 
       doc.rect(colX[16], headerY, colX[17] - colX[16], totalHeaderHeight);
       doc.text("Misc", (colX[16] + colX[17]) / 2, headerY + totalHeaderHeight / 2 + 3, { align: "center" });
@@ -415,16 +415,16 @@ const App = () => {
         doc.text(String(rowData.childOtherTH), colX[3] + 1, yPos + 3);
         doc.text(String(rowData.workerTH), colX[4] + 1, yPos + 3);
         doc.text(String(Math.round(rowData.totalTH)), colX[5] + 1, yPos + 3);
-        doc.text(displayVal(rowData.motherEgg), colX[6] + 1, yPos + 3);
-        doc.text(displayVal(rowData.childMalEgg), colX[7] + 1, yPos + 3);
-        doc.text(displayVal(rowData.childOtherEgg), colX[8] + 1, yPos + 3);
-        doc.text(displayVal(rowData.workerEgg), colX[9] + 1, yPos + 3);
-        doc.text(displayVal(rowData.eggTotal), colX[10] + 1, yPos + 3);
-        doc.text(displayVal(rowData.motherVeg), colX[11] + 1, yPos + 3);
-        doc.text(displayVal(rowData.childMalVeg), colX[12] + 1, yPos + 3);
-        doc.text(displayVal(rowData.childOtherVeg), colX[13] + 1, yPos + 3);
-        doc.text(displayVal(rowData.workerVeg), colX[14] + 1, yPos + 3);
-        doc.text(displayVal(rowData.vegTotal), colX[15] + 1, yPos + 3);
+        doc.text(displayVal(rowData.motherVeg), colX[6] + 1, yPos + 3);
+        doc.text(displayVal(rowData.childMalVeg), colX[7] + 1, yPos + 3);
+        doc.text(displayVal(rowData.childOtherVeg), colX[8] + 1, yPos + 3);
+        doc.text(displayVal(rowData.workerVeg), colX[9] + 1, yPos + 3);
+        doc.text(displayVal(rowData.vegTotal), colX[10] + 1, yPos + 3);
+        doc.text(displayVal(rowData.motherEgg), colX[11] + 1, yPos + 3);
+        doc.text(displayVal(rowData.childMalEgg), colX[12] + 1, yPos + 3);
+        doc.text(displayVal(rowData.childOtherEgg), colX[13] + 1, yPos + 3);
+        doc.text(displayVal(rowData.workerEgg), colX[14] + 1, yPos + 3);
+        doc.text(displayVal(rowData.eggTotal), colX[15] + 1, yPos + 3);
         doc.text(displayVal(rowData.misc), colX[16] + 1, yPos + 3);
         doc.text(displayVal(rowData.grandTotal), colX[17] + 1, yPos + 3);
       } else {
@@ -455,16 +455,16 @@ const App = () => {
       doc.text(String(sums.childOtherTH), colX[3] + 1, yPos + 3);
       doc.text(String(sums.workerTH), colX[4] + 1, yPos + 3);
       doc.text(displayVal(sums.totalTH), colX[5] + 1, yPos + 3);
-      doc.text(displayVal(sums.motherEgg), colX[6] + 1, yPos + 3);
-      doc.text(displayVal(sums.childMalEgg), colX[7] + 1, yPos + 3);
-      doc.text(displayVal(sums.childOtherEgg), colX[8] + 1, yPos + 3);
-      doc.text(displayVal(sums.workerEgg), colX[9] + 1, yPos + 3);
-      doc.text(displayVal(sums.eggTotal), colX[10] + 1, yPos + 3);
-      doc.text(displayVal(sums.motherVeg), colX[11] + 1, yPos + 3);
-      doc.text(displayVal(sums.childMalVeg), colX[12] + 1, yPos + 3);
-      doc.text(displayVal(sums.childOtherVeg), colX[13] + 1, yPos + 3);
-      doc.text(displayVal(sums.workerVeg), colX[14] + 1, yPos + 3);
-      doc.text(displayVal(sums.vegTotal), colX[15] + 1, yPos + 3);
+      doc.text(displayVal(sums.motherVeg), colX[6] + 1, yPos + 3);
+      doc.text(displayVal(sums.childMalVeg), colX[7] + 1, yPos + 3);
+      doc.text(displayVal(sums.childOtherVeg), colX[8] + 1, yPos + 3);
+      doc.text(displayVal(sums.workerVeg), colX[9] + 1, yPos + 3);
+      doc.text(displayVal(sums.vegTotal), colX[10] + 1, yPos + 3);
+      doc.text(displayVal(sums.motherEgg), colX[11] + 1, yPos + 3);
+      doc.text(displayVal(sums.childMalEgg), colX[12] + 1, yPos + 3);
+      doc.text(displayVal(sums.childOtherEgg), colX[13] + 1, yPos + 3);
+      doc.text(displayVal(sums.workerEgg), colX[14] + 1, yPos + 3);
+      doc.text(displayVal(sums.eggTotal), colX[15] + 1, yPos + 3);
       doc.text(displayVal(sums.misc), colX[16] + 1, yPos + 3);
       doc.text(displayVal(sums.grandTotal), colX[17] + 1, yPos + 3);
 
