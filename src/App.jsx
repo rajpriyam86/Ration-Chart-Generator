@@ -197,28 +197,28 @@ const App = () => {
     const displayVal = (val) =>
       val === "" || val === null || isNaN(val) ? "" : Number(val).toFixed(2);
 
-    const marginLeft = 10;
-    const tableWidth = 190;
+    const marginLeft = 6;
+    const tableWidth = 196;
     const colX = [
       marginLeft,
-      marginLeft + 10,
+      marginLeft + 9,
       marginLeft + 20,
       marginLeft + 30,
       marginLeft + 40,
       marginLeft + 50,
-      marginLeft + 60,
-      marginLeft + 70,
-      marginLeft + 80,
-      marginLeft + 90,
-      marginLeft + 100,
-      marginLeft + 110,
-      marginLeft + 120,
-      marginLeft + 130,
-      marginLeft + 140,
-      marginLeft + 150,
-      marginLeft + 160,
-      marginLeft + 175,
-      marginLeft + 190,
+      marginLeft + 63,
+      marginLeft + 74,
+      marginLeft + 84,
+      marginLeft + 94,
+      marginLeft + 104,
+      marginLeft + 117,
+      marginLeft + 128,
+      marginLeft + 138,
+      marginLeft + 148,
+      marginLeft + 158,
+      marginLeft + 171,
+      marginLeft + 183,
+      marginLeft + 196,
     ];
 
     const row1Height = 7;
@@ -489,6 +489,7 @@ const App = () => {
           sums.workerTH += d.workerTH;
           sums.totalTH += d.totalTH;
           sums.motherEgg += d.motherEgg;
+
           sums.childMalEgg += d.childMalEgg;
           sums.childOtherEgg += d.childOtherEgg;
           sums.workerEgg += d.workerEgg;
@@ -597,16 +598,16 @@ const App = () => {
     doc.text(String(grandSums.childOtherTH), colX[3] + 1, yPos + 4);
     doc.text(String(grandSums.workerTH), colX[4] + 1, yPos + 4);
     doc.text(displayVal(grandSums.totalTH), colX[5] + 1, yPos + 4);
-    doc.text(displayVal(grandSums.motherEgg), colX[6] + 1, yPos + 4);
-    doc.text(displayVal(grandSums.childMalEgg), colX[7] + 1, yPos + 4);
-    doc.text(displayVal(grandSums.childOtherEgg), colX[8] + 1, yPos + 4);
-    doc.text(displayVal(grandSums.workerEgg), colX[9] + 1, yPos + 4);
-    doc.text(displayVal(grandSums.eggTotal), colX[10] + 1, yPos + 4);
-    doc.text(displayVal(grandSums.motherVeg), colX[11] + 1, yPos + 4);
-    doc.text(displayVal(grandSums.childMalVeg), colX[12] + 1, yPos + 4);
-    doc.text(displayVal(grandSums.childOtherVeg), colX[13] + 1, yPos + 4);
-    doc.text(displayVal(grandSums.workerVeg), colX[14] + 1, yPos + 4);
-    doc.text(displayVal(grandSums.vegTotal), colX[15] + 1, yPos + 4);
+    doc.text(displayVal(grandSums.motherVeg), colX[6] + 1, yPos + 4);
+    doc.text(displayVal(grandSums.childMalVeg), colX[7] + 1, yPos + 4);
+    doc.text(displayVal(grandSums.childOtherVeg), colX[8] + 1, yPos + 4);
+    doc.text(displayVal(grandSums.workerVeg), colX[9] + 1, yPos + 4);
+    doc.text(displayVal(grandSums.vegTotal), colX[10] + 1, yPos + 4);
+    doc.text(displayVal(grandSums.motherEgg), colX[11] + 1, yPos + 4);
+    doc.text(displayVal(grandSums.childMalEgg), colX[12] + 1, yPos + 4);
+    doc.text(displayVal(grandSums.childOtherEgg), colX[13] + 1, yPos + 4);
+    doc.text(displayVal(grandSums.workerEgg), colX[14] + 1, yPos + 4);
+    doc.text(displayVal(grandSums.eggTotal), colX[15] + 1, yPos + 4);
     doc.text(displayVal(grandSums.misc), colX[16] + 1, yPos + 4);
     doc.text(displayVal(grandSums.grandTotal), colX[17] + 1, yPos + 4);
 
