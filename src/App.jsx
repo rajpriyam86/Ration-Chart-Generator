@@ -1,5 +1,6 @@
 import { useState } from "react";
 import jsPDF from "jspdf";
+import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
 import fontData from "./bengaliFont.json";
 
@@ -908,6 +909,7 @@ const App = () => {
           </div>
         </div>
       )}
+      <Analytics />
     </div>
   );
 };
